@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f4f5" />
+  <title>Galerie AR — Décos murales</title>
+  <style>
+    :root{
+      --bg:#f7f7f8; /* gris blanc */
+      --fg:#0f172a; /* encre */
+      --muted:#6b7280;
+      --card:#ffffff;
+      --accent:#111827;
+      --accent-2:#e5e7eb;
+      --ring: 0 0 0 2px rgba(0,0,0,.06);
+      --radius: 18px;
+      --shadow: 0 10px 25px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--fg);
+      background: radial-gradient(1200px 800px at 20% -10%, #ffffff 0, var(--bg) 60%), linear-gradient(#fff, var(--bg));
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:16px}
+
+    /* Header */
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.7);
+      border-bottom:1px solid var(--accent-2);
+    }
+    .topbar-inner{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 16px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+    .badge{font-size:12px;color:#374151;background:#e5e7eb;border-radius:999px;padding:4px 8px}
+    .actions{display:flex;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--accent-2);background:#fff;padding:10px 14px;border-radius:14px;box-shadow:var(--shadow);cursor:pointer;transition:transform .08s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+
+    /* Filters (optional placeholder hidden by default) */
+    .filters{display:none}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0}
+    @media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:1024px){.grid{grid-template-columns:repeat(4,1fr)}}
+
+    /* Card */
+    .card{list-style:none;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;position:relative;transform-style:preserve-3d;will-change:transform;transition:transform .15s ease, box-shadow .2s ease}
+    .card::after{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at 80% -20%, rgba(0,0,0,.06), transparent 60%);pointer-events:none}
+    .card:hover{box-shadow:0 15px 35px rgba(0,0,0,.12)}
+    .tilt{position:relative;aspect-ratio:1/1;background:linear-gradient(135deg, #fafafa, #ececec);display:grid;place-items:center}
+    .thumb{max-width:82%;max-height:82%;object-fit:contain;filter:drop-shadow(0 10px 12px rgba(0,0,0,.15))}
+    .meta{padding:10px 12px 12px}
+    .title{font-weight:600}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .ar-badge{position:absolute;top:10px;left:10px;background:#111827;color:#fff;font-size:11px;padding:6px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--shadow)}
+
+    /* Toast */
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s ease}
+    .toast.show{opacity:1}
+
+    /* Footer */
+    footer{padding:40px 16px;color:#6b7280;text-align:center}
+
+    /* Accessibility: reduce motion resets tilt */
+    @media (prefers-reduced-motion: reduce){
+      .card{transition:none !important; transform:none !important}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner container">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7l9-5z" fill="#111827"/><path d="M12 4.2L5 8v8l7 3.8 7-3.8V8l-7-3.8z" fill="#fff"/></svg>
+        <span>Galerie AR</span>
+        <span class="badge">Décos murales 3D</span>
+      </div>
+      <div class="actions">
+        <a id="vintedBtn" class="btn" target="_blank" rel="noopener" href="https://www.vinted.fr/member/xxxxxxx">
+          <!-- replace the URL above with your Vinted shop/profile -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+          <span>Vinted</span>
+        </a>
+        <button id="shareBtn" class="btn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>
+          <span>Partager</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <ul id="grid" class="grid" aria-live="polite"></ul>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <footer>
+    <div class="container">© <span id="year"></span> — Galerie AR. Hébergé sur GitHub Pages.</div>
+  </footer>
+
+  <script>
+    // ============================
+    // 1) Définir vos designs ici
+    // Remplacez les URLs par vos propres fichiers (HTTPS recommandé)
+    // miniatures (PNG/SVG), fichier AR iOS (.usdz), fichier AR Android (.glb)
+    // ============================
+    const DESIGNS = [
+      {
+        id: "deco-001",
+        title: "Étoile nordique",
+        category: "Géométrie",
+        dimensions: "30 × 30 cm",
+        thumb: "assets/deco-001.png",
+        usdzUrl: "ar/deco-001.usdz",
+        glbUrl: "ar/deco-001.glb"
+      },
+      {
+        id: "deco-002",
+        title: "Feuille Monstera",
+        category: "Nature",
+        dimensions: "40 × 28 cm",
+        thumb: "assets/deco-002.png",
+        usdzUrl: "ar/deco-002.usdz",
+        glbUrl: "ar/deco-002.glb"
+      },
+      {
+        id: "deco-003",
+        title: "Vague Japon",
+        category: "Art",
+        dimensions: "50 × 20 cm",
+        thumb: "assets/deco-003.png",
+        usdzUrl: "ar/deco-003.usdz",
+        glbUrl: "ar/deco-003.glb"
+      },
+      // Ajoutez autant d'entrées que nécessaire
+    ];
+
+    // ============================
+    // 2) Helpers
+    // ============================
+    const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
+    const isAndroid = () => /Android/i.test(navigator.userAgent);
+
+    function showToast(msg){
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=> el.classList.remove('show'), 2200);
+    }
+
+    // Open AR file depending on platform
+    function openARForItem(item){
+      // Require user gesture — call from click/tap only
+      if (isIOS()){
+        // iOS Quick Look — needs an <a rel="ar" href="*.usdz"> dans le DOM
+        const a = document.createElement('a');
+        a.setAttribute('rel', 'ar');
+        a.setAttribute('href', item.usdzUrl);
+        // Optionnel: fallback poster
+        const img = document.createElement('img');
+        img.src = item.thumb; img.alt = item.title; img.style.display = 'none';
+        a.appendChild(img);
+        document.body.appendChild(a);
+        a.click();
+        // Clean up après un court délai
+        setTimeout(()=> a.remove(), 1000);
+      } else if (isAndroid()){
+        // Scene Viewer (Android)
+        const src = new URL(item.glbUrl, window.location.href).toString();
+        const linkBack = window.location.href;
+        const sceneViewerUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(src)}&mode=ar_only&link=${encodeURIComponent(linkBack)}`;
+        // Redirection directe
+        window.location.href = sceneViewerUrl;
+        // En cas d'échec (navigateurs non compatibles), on tente de télécharger le .glb
+        setTimeout(()=>{
+          // si l'utilisateur est toujours sur la page après 1.5s, proposer le téléchargement
+          if (document.visibilityState === 'visible'){
+            const a = document.createElement('a');
+            a.href = item.glbUrl; a.download = '';
+            document.body.appendChild(a); a.click(); a.remove();
+          }
+        }, 1500);
+      } else {
+        showToast('Ouvre ce lien depuis un smartphone pour la RA.');
+      }
+    }
+
+    // ============================
+    // 3) Rendu de la grille
+    // ============================
+    const grid = document.getElementById('grid');
+
+    DESIGNS.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'card';
+      li.setAttribute('tabindex', '0');
+      li.setAttribute('role', 'button');
+      li.setAttribute('aria-label', `${item.title}, ${item.category}, ${item.dimensions}. Ouvrir en réalité augmentée`);
+
+      // Badge AR
+      const badge = document.createElement('span');
+      badge.className = 'ar-badge';
+      badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8.5 4.9v9.8L12 22 3.5 16.7V6.9L12 2z"/><path d="M12 22V12l8.5-5.1"/><path d="M12 12L3.5 6.9"/></svg> RA';
+      li.appendChild(badge);
+
+      // Zone tilt + image
+      const tilt = document.createElement('div');
+      tilt.className = 'tilt';
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.loading = 'lazy';
+      img.alt = item.title;
+      img.src = item.thumb;
+      tilt.appendChild(img);
+
+      // Meta
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const title = document.createElement('div');
+      title.className = 'title';
+      title.textContent = item.title;
+      const sub = document.createElement('div');
+      sub.className = 'sub';
+      sub.textContent = `${item.category} • ${item.dimensions}`;
+      meta.appendChild(title); meta.appendChild(sub);
+
+      li.appendChild(tilt); li.appendChild(meta);
+
+      // Click & keyboard
+      li.addEventListener('click', () => openARForItem(item));
+      li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openARForItem(item); }});
+
+      // Tilt effect (mouse + touch)
+      const maxTilt = 10; // degrés
+      let pointerDown = false;
+      function setTilt(xRatio, yRatio){
+        const rx = (yRatio - .5) * -2 * maxTilt; // haut/bas => rotateX inverse
+        const ry = (xRatio - .5) * 2 * maxTilt;
+        li.style.transform = `perspective(800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      }
+      function resetTilt(){ li.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)'; }
+
+      li.addEventListener('pointerenter', ()=> pointerDown=false);
+      li.addEventListener('pointermove', (e)=>{
+        const r = li.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        setTilt(x,y);
+      });
+      li.addEventListener('pointerleave', resetTilt);
+
+      // Touch: petite inclinaison suivant le doigt
+      li.addEventListener('touchstart', ()=> { pointerDown = true; }, {passive:true});
+      li.addEventListener('touchmove', (e)=>{
+        if(!pointerDown) return;
+        const t = e.touches[0];
+        const r = li.getBoundingClientRect();
+        const x = (t.clientX - r.left) / r.width;
+        const y = (t.clientY - r.top) / r.height;
+        setTilt(x,y);
+      }, {passive:true});
+      li.addEventListener('touchend', ()=> { pointerDown = false; resetTilt(); }, {passive:true});
+
+      grid.appendChild(li);
+    });
+
+    // ============================
+    // 4) Partage
+    // ============================
+    const shareBtn = document.getElementById('shareBtn');
+    shareBtn.addEventListener('click', async () => {
+      const url = window.location.href;
+      const data = { title: document.title, text: 'Découvre mes décos murales en RA', url };
+      if (navigator.share){
+        try{ await navigator.share(data); } catch(err){ /* annulé */ }
+      } else if (navigator.clipboard){
+        try{ await navigator.clipboard.writeText(url); showToast('Lien copié ✅'); } catch { showToast('Impossible de copier'); }
+      } else {
+        // fallback input
+        const i = document.createElement('input'); i.value = url; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); showToast('Lien copié ✅');
+      }
+    });
+
+    // ============================
+    // 5) Year
+    // ============================
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
